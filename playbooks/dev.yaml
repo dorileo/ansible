@@ -1,0 +1,16 @@
+---
+- import_playbook: base.yaml
+- hosts: all
+  tasks:
+    - name: Install Dev Packages
+      package: name={{ item }}
+      become: true
+      with_items:
+        - automake
+        - cmake
+        - gcc
+        - gdb
+        - go
+        - make
+        - strace
+        - tig

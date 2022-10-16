@@ -1,0 +1,30 @@
+---
+- hosts: all
+  vars:
+    home: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+    ansible_dir: "{{ home }}/.ansible"
+    ansible_artifacts: "{{ ansible_dir }}/artifacts"
+    configs: "{{ ansible_artifacts }}/configs"
+    git_email: "{{ lookup('ansible.builtin.env', 'GIT_CONFIG_EMAIL', default='l@dorileo.org') }}"
+  tasks:
+    - name: Install Base Packages
+      package: name={{ item }}
+      become: true
+      with_items:
+        - emacs
+        - git
+        - less
+        - tmux
+    - name: Clone Configs
+      git: repo=https://github.com/dorileo/{{ item }}.git dest={{ configs }}/{{ item }} force=no update=no
+      with_items:
+        - emacs.d
+        - dot-configs
+    - name: Symlink Configs
+      file: path={{ home }}/{{ item.key }} src={{ configs }}/{{ item.value }} state=link
+      with_dict:
+        - .emacs.d: emacs.d
+        - .tmux.conf: dot-configs/tmux.conf
+        - .gitconfig: dot-configs/gitconfig
+    - name: Git Configuration
+      command: git config -f {{ home }}/.gitconfig user.email {{ git_email }}
